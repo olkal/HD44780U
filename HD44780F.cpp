@@ -1,6 +1,7 @@
 
 #include <Arduino.h>
 #include "HD44780F.h"
+#include "HD44780F_HW.h"
 
 // Constructor
 HD44780F::HD44780F() {
