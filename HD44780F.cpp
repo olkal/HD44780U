@@ -219,24 +219,16 @@ void HD44780F::write8bits_4bitMode(uint8_t value) {
 }
 
 //** Read 8 bits, 4bit mode (RW pin must be connected)
-//** It's not required to read more than D7 for busy status, but 
-//** as reading the port directly is so fast, it dosent seem to make any difference in speed
+//** It's not necessary to read more than the D7 pin for busy status
 uint8_t HD44780F::read8bits_4bitMode() {
 	uint8_t val = 0;
 	EN_H; //EN pin high
 	WAIT450NS;
 	if (D7_READ) val |= 0x80;
-	if (D6_READ) val |= 0x40;
-	if (D5_READ) val |= 0x20;
-	if (D4_READ) val |= 0x10;
 	EN_L; //EN pin low
 	WAIT450NS;
 	EN_H; //EN pin high
 	WAIT450NS;
-	if (D7_READ) val |= 0x08;
-	if (D6_READ) val |= 0x04;
-	if (D5_READ) val |= 0x02;
-	if (D4_READ) val |= 0x01;
 	EN_L; //EN pin low
 	return val;
 }
