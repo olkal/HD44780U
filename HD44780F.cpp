@@ -230,5 +230,6 @@ uint8_t HD44780F::read8bits_4bitMode() {
 	EN_H; //EN pin high
 	WAIT450NS;
 	EN_L; //EN pin low
+	WAIT450NS;
 	return val;
 }
