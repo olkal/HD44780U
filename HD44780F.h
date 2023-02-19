@@ -54,43 +54,8 @@
 #define LCD_DATA                1
 #define FOUR_BITS               2
 
-#define NOP __asm__ __volatile__("nop\n\t")
-
-#ifdef __AVR__
-#define WAIT450NS __asm__ __volatile__("nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t""nop\n\t")
-#define WAIT60NS NOP
-#endif
-
-#define WAIT_HOME_CLEAR			2000
-#define WAIT_BUSY				37
-
-//** hardware macros
-#define RW_PIN_CONNECTED 1
-#define USE_READ_BUSY
-#define RS_PINM_OUT DDRC |= B10000000
-#define RW_PINM_OUT DDRD |= B10000000
-#define EN_PINM_OUT DDRC |= B01000000
-#define D4D7_PINM_OUT DDRC |= B00111100 //PC02-PC05 output
-#define D4D7_PINM_INP DDRC &= B11000011 //PC02-PC05 input
-#define D4D7_L PORTC &= B11000011
-#define D7_READ ((PINC & B00000100) >> 2) //PC02 read
-#define D6_READ ((PINC & B00001000) >> 3) //PC03 read
-#define D5_READ ((PINC & B00010000) >> 4) //PC04 read
-#define D4_READ ((PINC & B00100000) >> 5) //PC05 read
-#define D7_L PORTC &= B11111011 //PC02 low
-#define D7_H PORTC |= B00000100 //PC02 high
-#define D6_L PORTC &= B11110111 //PC03 low
-#define D6_H PORTC |= B00001000 //PC03 high
-#define D5_L PORTC &= B11101111 //PC04 low
-#define D5_H PORTC |= B00010000 //PC04 high
-#define D4_L PORTC &= B11011111 //PC05 low
-#define D4_H PORTC |= B00100000 //PC05 high
-#define EN_L PORTC &= B10111111 //PC06 low
-#define EN_H PORTC |= B01000000 //PC06 high
-#define RS_L PORTC &= B01111111 //PC07 low
-#define RS_H PORTC |= B10000000 //PC07 high 
-#define RW_L PORTD &= B01111111 //PD07 low
-#define RW_H PORTD |= B10000000 //PD07 high
+#define WAIT_HOME_CLEAR			2000 // home clear delay
+#define WAIT_BUSY				37   // write operation delay
 
 class HD44780F : public Print
 {
