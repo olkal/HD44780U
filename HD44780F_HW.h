@@ -24,12 +24,9 @@
 #define RS_PINM_OUT DDRC |= B10000000 //RS PC07 pinmode
 #define RW_PINM_OUT DDRD |= B10000000 //RW PD07 pinmode
 #define EN_PINM_OUT DDRC |= B01000000 //EN PC06 pinmode
-#define D4D7_PINM_OUT DDRC |= B00111100 //PC02-PC05 pinmode output (write operation)
-#define D4D7_PINM_INP DDRC &= B11000011 //PC02-PC05 pinmode input (to read busy flag)
+#define D4D7_PINM_OUT DDRC |= B00111100 //D4-D7 PC02-PC05 pinmode output (write operation)
+#define D4D7_PINM_INP DDRC &= B11000011 //D4-D7 PC02-PC05 pinmode input (to read D7 busy flag), all 4 pins must be set to input mode
 #define D7_READ ((PINC & B00000100) >> 2) //D7 PC02 read
-#define D6_READ ((PINC & B00001000) >> 3) //D6 PC03 read
-#define D5_READ ((PINC & B00010000) >> 4) //D5 PC04 read
-#define D4_READ ((PINC & B00100000) >> 5) //D4 PC05 read
 #define D7_L PORTC &= B11111011 //D7 PC02 low
 #define D7_H PORTC |= B00000100 //D7 PC02 high
 #define D6_L PORTC &= B11110111 //D6 PC03 low
