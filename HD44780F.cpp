@@ -183,7 +183,7 @@ void HD44780F::pulse_EN() {
 	WAIT450NS;
 }
 
-//** write 4 bits, for initialization procedure in 4bit mode
+//** write 4 bits, for initialization procedure in 4bit mode, 1 cycle operation
 void HD44780F::write4bits_4bitMode(uint8_t value) {
 	if (value & 0x01) D4_H;
 	else D4_L;
@@ -196,7 +196,7 @@ void HD44780F::write4bits_4bitMode(uint8_t value) {
 	pulse_EN();
 }
 
-//** write 8 bits, 4bit mode
+//** write 8 bits, 4bit mode, 2 cycle operation
 void HD44780F::write8bits_4bitMode(uint8_t value) {
 	if (value & 0x80) D7_H;
 	else D7_L;
@@ -218,7 +218,7 @@ void HD44780F::write8bits_4bitMode(uint8_t value) {
 	pulse_EN();
 }
 
-//** Read 8 bits, 4bit mode (RW pin must be connected)
+//** Read 8 bits, 4bit mode (RW pin must be connected), 2 cycle operation
 //** It's not necessary to read more than the D7 pin for busy status
 uint8_t HD44780F::read8bits_4bitMode() {
 	uint8_t val = 0;
