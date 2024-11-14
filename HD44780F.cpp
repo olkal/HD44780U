@@ -169,6 +169,7 @@ void HD44780F::busy() {
 	uint8_t flag = 0x80;
 	while ((flag & 0x80) == 0x80) { //wait for busy flag to clear
 		flag = read8bits_4bitMode();
+		if ((micros() - waitStart) > WAIT_BUSY) break; // timeout
 	}
 	RW_L; //RW pin low
 	D4D7_PINM_OUT;  // set MCU pins to output for DB7-DB04
