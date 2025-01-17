@@ -2,8 +2,9 @@
 #define HD44780F_H
 
 #include "Arduino.h"
+#ifdef __AVR__
 #include "avr/pgmspace.h"
-//#include <inttypes.h>
+#endif
 
 // LCD Commands
 // ---------------------------------------------------------------------------
@@ -57,69 +58,70 @@
 #define WAIT_HOME_CLEAR			2000 // home clear delay
 #define WAIT_BUSY				37   // write operation delay
 
-class HD44780F : public Print
+class HD44780U : public Print
 {
 public:
-	HD44780F();
-	//** LCD initialization
+	HD44780U();
+	/// LCD initialization
 	void begin(uint8_t cols, uint8_t lines);
 
-	//** clears the LCD screen and positions the cursor in the upper-left corner (time consuming).
+	/// clears the LCD screen and positions the cursor in the upper-left corner (time consuming).
 	void clear();
 
-	//** turns off the display
+	/// turns off the display
 	void noDisplay();
 
-	//** turns on the display
+	/// turns on the display
 	void display();
-	/*
-	//** display the blinking LCD cursor
+	
+	/// display the blinking LCD cursor
 	void blink();
 
-	//** hides the LCD cursor
+	/// hides the LCD cursor
 	void noBlink();
-
-	//** Scrolls the contents of the display (text and cursor) one space to the left
+	/*
+	/// Scrolls the contents of the display (text and cursor) one space to the left
 	void scrollDisplayLeft();
 
-	//** Scrolls the contents of the display (text and cursor) one space to the right
+	/// Scrolls the contents of the display (text and cursor) one space to the right
 	void scrollDisplayRight();
 
-	//** set the direction for text written to the LCD to left-to-right
+	/// set the direction for text written to the LCD to left-to-right
 	void leftToRight();
 
-	//** set the direction for text written to the LCD to right-to-left
+	/// set the direction for text written to the LCD to right-to-left
 	void rightToLeft();
 
-	//** moves the cursor one space to the left
+	/// moves the cursor one space to the left
 	void moveCursorLeft();
 
-	//** moves the cursor one space to the right
+	/// moves the cursor one space to the right
 	void moveCursorRight();
 
-	//** enable autoscroll will outputting each new character to the same location on the LCD.
+	/// enable autoscroll will outputting each new character to the same location on the LCD.
 	void autoscroll();
 
-	//** disable autoscroll
+	/// disable autoscroll
 	void noAutoscroll();
 	*/
 
-	//** create special character
+	/// create special character
 	void createChar(uint8_t location, uint8_t charmap[]);
 
-	//** create special character, for AVR, progmem
+	/// create special character, for AVR, progmem
 #ifdef __AVR__
 	void createChar(uint8_t location, const char* charmap);
 #endif // __AVR__
 
-	//** position the cursor
+	/// position the cursor
 	void setCursor(uint8_t col, uint8_t row);
 
-	//** virtual write method, implemented in the Print class
+	/// virtual write method, implemented in the Print class
 	virtual size_t write(uint8_t value);
 	using Print::write;
 
 private:
+	uint8_t entrymode = 0;        // Text entry mode to the LCD
 	uint8_t displaycontrol = 0;   // LCD base control command LCD on/off, blink, cursor
 	uint8_t displaymode = 0;      // Text entry mode to the LCD
 	uint8_t _numlines = 0;         // Number of lines of the LCD, initialized with begin()
