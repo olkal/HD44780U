@@ -56,7 +56,11 @@
 #define FOUR_BITS               2
 
 #define WAIT_HOME_CLEAR			2000 // home clear delay
-#define WAIT_BUSY				37   // write operation delay
+
+/* Write operation delay, see data sheet. I have fond that 37us works well, but it depends on the speed of the LCD internal oscilator, 
+*  perhaps some LCD's are slower and needs a longer delay.
+*  This delay is not in use if USE_READ_BUSY is defined in file HD44780U_HW.h */
+#define WAIT_BUSY				37   
 
 class HD44780U : public Print
 {
