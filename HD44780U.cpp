@@ -1,17 +1,18 @@
 
 #include <Arduino.h>
-#include "HD44780F.h"
-#include "HD44780F_HW.h"
+#include "HD44780U.h"
+#include "HD44780U_HW.h"
 
 // Constructor
-HD44780F::HD44780F() {
+HD44780U::HD44780U() {
 }
 
 //** initialization procedure
-void HD44780F::begin(uint8_t cols, uint8_t lines) {
+void HD44780U::begin(uint8_t cols, uint8_t lines) {
 
 	RS_PINM_OUT;
 	EN_PINM_OUT;
+
 	D4D7_PINM_OUT;
 	RS_L;
 	EN_L;
@@ -58,33 +59,33 @@ void HD44780F::begin(uint8_t cols, uint8_t lines) {
 	clear();
 
 	//**Initialize to default text direction (for roman languages)
-	displaycontrol = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
+	entrymode = LCD_ENTRYLEFT | LCD_ENTRYSHIFTDECREMENT;
 	//**set the entry mode
-	sendCommand(LCD_ENTRYMODESET | displaycontrol);
+	sendCommand(LCD_ENTRYMODESET | entrymode);
 	delayMicroseconds(100);
 }
 
 //** turns off the display
-void HD44780F::noDisplay() {
+void HD44780U::noDisplay() {
 	displaycontrol &= ~LCD_DISPLAYON;
 	sendCommand(LCD_DISPLAYCONTROL | displaycontrol);
 }
 
 //** turns on the display, cursor off, blink off
-void HD44780F::display() {
+void HD44780U::display() {
 	displaycontrol |= LCD_DISPLAYON;
 	sendCommand(LCD_DISPLAYCONTROL | displaycontrol);
 }
 
 //** clear screen, takes 2000us
-void HD44780F::clear()
+void HD44780U::clear()
 {
 	sendCommand(LCD_CLEARDISPLAY);             // clear display, set cursor position to zero
 	delayMicroseconds(WAIT_HOME_CLEAR);    // this command is time consuming
 }
 
 //** create special character
-void HD44780F::createChar(uint8_t location, uint8_t charmap[]) {
+void HD44780U::createChar(uint8_t location, uint8_t charmap[]) {
 	location &= 0x7;            // we only have 8 locations 0-7
 
 	sendCommand(LCD_SETCGRAMADDR | (location << 3));
@@ -99,7 +100,7 @@ void HD44780F::createChar(uint8_t location, uint8_t charmap[]) {
 
 //** create special character, for AVR, progmem
 #ifdef __AVR__
-void HD44780F::createChar(uint8_t location, const char* charmap) {
+void HD44780U::createChar(uint8_t location, const char* charmap) {
 	location &= 0x7;   // we only have 8 memory locations 0-7
 
 	sendCommand(LCD_SETCGRAMADDR | (location << 3));
@@ -114,21 +115,31 @@ void HD44780F::createChar(uint8_t location, const char* charmap) {
 #endif // __AVR__
 
 //** position the cursor, col and row start at 0
-void HD44780F::setCursor(uint8_t col, uint8_t row) {
+void HD44780U::setCursor(uint8_t col, uint8_t row) {
 	const uint8_t row_offsetsDef[] = { 0x00, 0x40, 0x14, 0x54 }; // For regular LCDs
 	//const uint8_t row_offsetsLarge[] = { 0x00, 0x40, 0x10, 0x50 }; // For 16x4 LCDs, not implemented
 	sendCommand(LCD_SETDDRAMADDR | (col + row_offsetsDef[row]));
 }
 
+void HD44780U::blink() {
+	displaycontrol |= LCD_BLINKON;
+	sendCommand(LCD_DISPLAYCONTROL | displaycontrol);
+}
+
+void HD44780U::noBlink() {
+	displaycontrol &= ~LCD_BLINKON;
+	sendCommand(LCD_DISPLAYCONTROL | displaycontrol);
+}
+
 //** for "write" command
-size_t HD44780F::write(uint8_t value)
+size_t HD44780U::write(uint8_t value)
 {
 	sendData(value);
 	return 1;             // assume OK
 }
 
 //** send command to LCD
-void HD44780F::sendCommand(uint8_t value) {
+void HD44780U::sendCommand(uint8_t value) {
 	busy();
 	RS_L;
 	WAIT60NS;
@@ -137,7 +148,7 @@ void HD44780F::sendCommand(uint8_t value) {
 }
 
 //** send data to LCD
-void HD44780F::sendData(uint8_t value) {
+void HD44780U::sendData(uint8_t value) {
 	busy();
 	RS_H;
 	WAIT60NS;
@@ -146,19 +157,22 @@ void HD44780F::sendData(uint8_t value) {
 }
 
 //** start busy period (if RW pin not connected)
-void HD44780F::busyStart() {
-#ifndef USE_READ_BUSY
+void HD44780U::busyStart() {
 	waitStart = micros();
-#endif
 }
 
 //** check busy status
-void HD44780F::busy() {
+void HD44780U::busy() {
 	//**RW pin not connected, using fixed period for busy status
 #ifndef USE_READ_BUSY
 	while ((micros() - waitStart) < WAIT_BUSY) {
-		NOP;
+#ifdef ESP32
+		yield(); //** for ESP32
+#else 
+		NOP;	//** for AVR
+#endif
 	}
+
 #else
 	//** RW pin connected, read DB7 for busy status
 	D4D7_PINM_INP;  // set MCU pins to input for DB7-DB04
@@ -168,8 +182,12 @@ void HD44780F::busy() {
 	WAIT60NS;
 	uint8_t flag = 0x80;
 	while ((flag & 0x80) == 0x80) { //wait for busy flag to clear
+		if ((micros() - waitStart) > WAIT_BUSY) {
+			//Serial.print("LCD busy timeout:");
+			//Serial.println(micros() - waitStart);
+			break; // timeout
+		}
 		flag = read8bits_4bitMode();
-		if ((micros() - waitStart) > WAIT_BUSY) break; // timeout
 	}
 	RW_L; //RW pin low
 	D4D7_PINM_OUT;  // set MCU pins to output for DB7-DB04
@@ -177,15 +195,15 @@ void HD44780F::busy() {
 }
 
 //** pulse EN pin
-void HD44780F::pulse_EN() {
+void HD44780U::pulse_EN() {
 	EN_H; //EN pin high
 	WAIT450NS;
 	EN_L; //EN pin low
 	WAIT450NS;
 }
 
-//** write 4 bits, for initialization procedure in 4bit mode, 1 cycle operation
-void HD44780F::write4bits_4bitMode(uint8_t value) {
+//** write 4 bits, for initialization procedure in 4bit mode
+void HD44780U::write4bits_4bitMode(uint8_t value) {
 	if (value & 0x01) D4_H;
 	else D4_L;
 	if (value & 0x02) D5_H;
@@ -197,8 +215,8 @@ void HD44780F::write4bits_4bitMode(uint8_t value) {
 	pulse_EN();
 }
 
-//** write 8 bits, 4bit mode, 2 cycle operation
-void HD44780F::write8bits_4bitMode(uint8_t value) {
+//** write 8 bits, 4bit mode
+void HD44780U::write8bits_4bitMode(uint8_t value) {
 	if (value & 0x80) D7_H;
 	else D7_L;
 	if (value & 0x40) D6_H;
@@ -219,10 +237,11 @@ void HD44780F::write8bits_4bitMode(uint8_t value) {
 	pulse_EN();
 }
 
-//** Read 8 bits, 4bit mode (RW pin must be connected), 2 cycle operation
+//** Read 8 bits, 4bit mode (RW pin must be connected)
 //** It's not necessary to read more than the D7 pin for busy status
-uint8_t HD44780F::read8bits_4bitMode() {
+uint8_t HD44780U::read8bits_4bitMode() {
 	uint8_t val = 0;
+#ifdef USE_READ_BUSY
 	EN_H; //EN pin high
 	WAIT450NS;
 	if (D7_READ) val |= 0x80;
@@ -232,5 +251,6 @@ uint8_t HD44780F::read8bits_4bitMode() {
 	WAIT450NS;
 	EN_L; //EN pin low
 	WAIT450NS;
+#endif
 	return val;
 }
