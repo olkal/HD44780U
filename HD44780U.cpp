@@ -163,9 +163,13 @@ void HD44780U::busyStart() {
 
 //** check busy status
 void HD44780U::busy() {
+	// Constants for magic numbers
+	const uint8_t BUSY_FLAG_MASK = 0x80;
+	const uint32_t TIMEOUT_PERIOD = WAIT_BUSY;
+
 	//**RW pin not connected, using fixed period for busy status
 #ifndef USE_READ_BUSY
-	while ((micros() - waitStart) < WAIT_BUSY) {
+	while ((micros() - waitStart) < TIMEOUT_PERIOD) {
 #ifdef ESP32
 		yield(); //** for ESP32
 #else 
@@ -180,13 +184,14 @@ void HD44780U::busy() {
 	EN_L; //EN pin low
 	RW_H; //RW pin high
 	WAIT60NS;
-	uint8_t flag = 0x80;
-	while ((flag & 0x80) == 0x80) { //wait for busy flag to clear
-		if ((micros() - waitStart) > WAIT_BUSY) {
-			//Serial.print("LCD busy timeout:");
-			//Serial.println(micros() - waitStart);
+	uint8_t flag = read8bits_4bitMode();
+	while ((flag & BUSY_FLAG_MASK) == BUSY_FLAG_MASK) { //wait for busy flag to clear
+		if ((micros() - waitStart) > TIMEOUT_PERIOD) {
+			Serial.print("LCD busy timeout:");
+			Serial.println(micros() - waitStart);
 			break; // timeout
 		}
+		delayMicroseconds(1);
 		flag = read8bits_4bitMode();
 	}
 	RW_L; //RW pin low
